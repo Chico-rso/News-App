@@ -61,8 +61,8 @@ const newsService = (function () {
 	const apiUrl = 'https://newsapi.org/v2';
 
 	return {
-		topHeadlines(country = 'ru', cb) {
-			http.get(`${apiUrl}/top-headlines?country=${country}&apiKey=${apiKey}`,cb)
+		topHeadlines(country = 'ru', category = 'general', cb) {
+			http.get(`${apiUrl}/top-headlines?country=${country}&category=${category}&apiKey=${apiKey}`,cb)
 		},
 		everything(query, cb) {
 			http.get(`${apiUrl}/everything?q=${query}&apiKey=${apiKey}`,cb)
@@ -74,6 +74,7 @@ const newsService = (function () {
 const form = document.forms['newsControls'];
 const countrySelect = form.elements['country'];
 const searchInput = form.elements['search'];
+const categorySelect = form.elements['category'];
 
 form.addEventListener('submit', (e) => {
 	e.preventDefault();
@@ -94,9 +95,10 @@ function loadNews()
 
 	const country = countrySelect.value;
 	const searchText = searchInput.value;
+	const category = categorySelect.value;
 
 	if(!searchText){
-		newsService.topHeadlines(country, onGetResponse);
+		newsService.topHeadlines(country, category, onGetResponse);
 	}else
 	{
 		newsService.everything(searchText, onGetResponse);
