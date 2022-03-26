@@ -66,9 +66,19 @@ const newsService = (function () {
 		},
 		everything(query, cb) {
 			http.get(`${apiUrl}/everything?q=${query}&apiKey=${apiKey}`,cb)
-		}
+		},
 	}
 })();
+
+//elements
+const form = document.forms['newsControls'];
+const countrySelect = form.elements['country'];
+const searchInput = form.elements['search'];
+
+form.addEventListener('submit', (e) => {
+	e.preventDefault();
+	loadNews();
+})
 
 //  init selects
 document.addEventListener('DOMContentLoaded', function()
@@ -80,17 +90,44 @@ document.addEventListener('DOMContentLoaded', function()
 //load news
 function loadNews()
 {
-	newsService.topHeadlines('ru', onGetResponse);
+	showPreloader();
+
+	const country = countrySelect.value;
+	const searchText = searchInput.value;
+
+	if(!searchText){
+		newsService.topHeadlines(country, onGetResponse);
+	}else
+	{
+		newsService.everything(searchText, onGetResponse);
+	}
 }
 //func on get response on server
 function onGetResponse(error, response)
 {
+	removePreloader();
+
+	if(error)
+	{
+		showMessage(error, 'error-msg');
+		return;
+	}
+	if (!response.articles.length)
+	{
+		showMessage("Новости не найдены", 'error-msg')
+		return;
+	}
 	renderNews(response.articles);
+
 }
 // func render news
 function renderNews(news)
 {
 	const newsContainer = document.querySelector('.news-container .row');
+	if (newsContainer.children.length)
+	{
+		clearContainer(newsContainer);
+	}
 	let fragment = '';
 	news.forEach((newsItem) =>
 	{
@@ -100,6 +137,18 @@ function renderNews(news)
 
 	newsContainer.insertAdjacentHTML('afterbegin', fragment)
 }
+//func clear newsContainer
+function clearContainer(container)
+{
+	//container.innerHTML = '';
+	let child = container.lastElementChild;
+	while(child) {
+		container.removeChild(child);
+		child = container.lastElementChild;
+	}
+}
+
+
 //func template news
 function newsTemplate({urlToImage, title, description, url})
 {
@@ -119,4 +168,30 @@ function newsTemplate({urlToImage, title, description, url})
 			</div>
 		</div>
 	`;
+}
+
+
+function showMessage(msg, type = 'success')
+{
+	M.toast({html: msg, classes: type})
+}
+
+//show preloader
+function showPreloader()
+{
+	document.body.insertAdjacentHTML('afterbegin',`
+		<div class="progress">
+			<div class="indeterminate"></div>
+		</div>
+	`)
+}
+
+//remove preloader function
+function removePreloader()
+{
+	const loader = document.querySelector('.progress')
+	if(loader)
+	{
+		loader.remove();
+	}
 }
